@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Dapper Dog — Live Campaign Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --card: #111111;
+    --card-hover: #141414;
+    --border: #1e1e1e;
+    --border-glow: #2a2a2a;
+    --gold: #C9A84C;
+    --gold-dim: #8a7334;
+    --gold-glow: rgba(201, 168, 76, 0.2);
+    --text: #f5f5f5;
+    --text-dim: #888;
+    --text-muted: #555;
+    --success: #4ade80;
+    --danger: #f87171;
+    --warning: #fbbf24;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(201, 168, 76, 0.06) 0%, transparent 40%),
+      radial-gradient(ellipse at 80% 80%, rgba(201, 168, 76, 0.04) 0%, transparent 40%);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px 24px 60px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding-bottom: 24px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .logo-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, var(--gold) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo-title::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    background: var(--gold);
+    border-radius: 50%;
+    box-shadow: 0 0 12px var(--gold), 0 0 24px var(--gold-glow);
+    animation: pulse 2s infinite;
+    -webkit-text-fill-color: initial;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.85); }
+  }
+
+  .logo-subtitle {
+    font-size: 13px;
+    color: var(--text-dim);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .last-updated {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+    padding: 8px 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+  }
+
+  .live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 8px var(--success);
+    animation: pulse 1.5s infinite;
+  }
+
+  /* KPI Grid */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .kpi-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--gold-glow) 0%, transparent 50%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  .kpi-card:hover {
+    border-color: var(--gold-dim);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(201, 168, 76, 0.08);
+  }
+
+  .kpi-card:hover::before {
+    opacity: 1;
+  }
+
+  .kpi-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .kpi-icon {
+    width: 14px;
+    height: 14px;
+    color: var(--gold);
+  }
+
+  .kpi-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
+  .kpi-delta {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 8px;
+  }
+
+  .kpi-delta.up { color: var(--success); }
+  .kpi-delta.down { color: var(--danger); }
+
+  /* Charts */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    transition: border-color 0.3s ease;
+  }
+
+  .card:hover { border-color: var(--border-glow); }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .card-badge {
+    font-size: 10px;
+    padding: 4px 10px;
+    background: rgba(201, 168, 76, 0.1);
+    color: var(--gold);
+    border: 1px solid rgba(201, 168, 76, 0.2);
+    border-radius: 100px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .chart-wrapper {
+    position: relative;
+    height: 260px;
+  }
+
+  /* Table */
+  .ads-table-card {
+    margin-bottom: 24px;
+  }
+
+  .ads-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .ads-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    gap: 12px;
+    padding: 10px 16px;
+    font-size: 10px;
+    color: var(--text-dim);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .ad-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #0d0d0d;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    align-items: center;
+    transition: all 0.2s ease;
+  }
+
+  .ad-row:hover {
+    border-color: var(--gold-dim);
+    background: var(--card-hover);
+  }
+
+  .ad-row.top {
+    border-color: var(--gold);
+    background: linear-gradient(90deg, rgba(201, 168, 76, 0.06) 0%, transparent 60%);
+    box-shadow: inset 0 0 0 1px rgba(201, 168, 76, 0.15);
+  }
+
+  .ad-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .ad-thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ad-thumb::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%);
+  }
+
+  .ad-thumb-1 { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+  .ad-thumb-2 { background: linear-gradient(135deg, #0891b2, #0ea5e9); }
+  .ad-thumb-3 { background: linear-gradient(135deg, #ea580c, #f59e0b); }
+  .ad-thumb-4 { background: linear-gradient(135deg, var(--gold), #eab308); color: #0a0a0a; }
+
+  .ad-name-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .ad-name-primary {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ad-name-secondary {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .ad-metric {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ad-metric-dim { color: var(--text-dim); }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    justify-self: start;
+  }
+
+  .status-active {
+    background: rgba(74, 222, 128, 0.1);
+    color: var(--success);
+    border: 1px solid rgba(74, 222, 128, 0.2);
+  }
+
+  .status-paused {
+    background: rgba(136, 136, 136, 0.1);
+    color: var(--text-dim);
+    border: 1px solid rgba(136, 136, 136, 0.2);
+  }
+
+  .status-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 6px currentColor;
+  }
+
+  /* Recommendations */
+  .rec-card {
+    background: linear-gradient(135deg, #111111 0%, #0d0d0d 100%);
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .rec-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(201, 168, 76, 0.1) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .rec-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  .rec-icon {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dim) 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #0a0a0a;
+    box-shadow: 0 0 20px var(--gold-glow);
+  }
+
+  .rec-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .rec-subtitle {
+    font-size: 11px;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .rec-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+  }
+
+  .rec-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  .rec-item.highlight {
+    border-color: rgba(201, 168, 76, 0.4);
+    background: rgba(201, 168, 76, 0.05);
+  }
+
+  .rec-bullet {
+    color: var(--gold);
+    font-size: 16px;
+    line-height: 1.3;
+    flex-shrink: 0;
+  }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  footer span {
+    color: var(--gold);
+    font-weight: 600;
+  }
+
+  /* Loading skeleton */
+  .skeleton {
+    background: linear-gradient(90deg, #141414 0%, #1e1e1e 50%, #141414 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 6px;
+    color: transparent !important;
+    user-select: none;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .error-banner {
+    background: rgba(248, 113, 113, 0.08);
+    border: 1px solid rgba(248, 113, 113, 0.2);
+    color: var(--danger);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .charts-grid { grid-template-columns: 1fr; }
+    .ads-header, .ad-row {
+      grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    }
+    .hide-md { display: none; }
+  }
+
+  @media (max-width: 640px) {
+    .container { padding: 20px 14px 40px; }
+    .logo-title { font-size: 26px; }
+    .kpi-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .kpi-card { padding: 18px; }
+    .kpi-value { font-size: 26px; }
+    .ads-header { display: none; }
+    .ad-row {
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 16px;
+    }
+    .ad-row .ad-name-cell { grid-column: 1 / -1; margin-bottom: 6px; }
+    .ad-metric::before {
+      content: attr(data-label);
+      display: block;
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .hide-sm { display: none; }
+    .status-badge { justify-self: start; }
+  }
+
+  /* Login Overlay */
+  body.locked { overflow: hidden; }
+  body.locked .container { display: none !important; }
+
+  #login-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: var(--bg);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    animation: loginFadeIn 0.4s ease;
+  }
+  body.locked #login-overlay { display: flex; }
+
+  #login-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(201, 168, 76, 0.10) 0%, transparent 45%),
+      radial-gradient(ellipse at 70% 80%, rgba(201, 168, 76, 0.06) 0%, transparent 45%);
+    pointer-events: none;
+  }
+
+  @keyframes loginFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .login-card {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    background: linear-gradient(180deg, #121212 0%, #0e0e0e 100%);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 48px 40px 40px;
+    box-shadow:
+      0 30px 80px rgba(0, 0, 0, 0.6),
+      0 0 0 1px rgba(201, 168, 76, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    text-align: center;
+  }
+
+  .login-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, var(--gold) 50%, transparent 100%);
+    opacity: 0.6;
+  }
+
+  .login-paw {
+    font-size: 52px;
+    line-height: 1;
+    margin-bottom: 20px;
+    filter: drop-shadow(0 0 18px var(--gold-glow));
+    animation: pawFloat 3s ease-in-out infinite;
+  }
+
+  @keyframes pawFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+
+  .login-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, var(--gold) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+
+  .login-subtitle {
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 36px;
+  }
+
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  #login-input {
+    width: 100%;
+    background: #0a0a0a;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    letter-spacing: 0.05em;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+
+  #login-input::placeholder { color: var(--text-muted); letter-spacing: 0.02em; }
+
+  #login-input:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px var(--gold-glow);
+  }
+
+  #login-input.shake {
+    animation: shake 0.5s;
+    border-color: var(--danger);
+    box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.15);
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-6px); }
+    80% { transform: translateX(6px); }
+  }
+
+  #login-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dim) 100%);
+    color: #0a0a0a;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.2s, filter 0.2s;
+    box-shadow: 0 6px 20px rgba(201, 168, 76, 0.25);
+  }
+
+  #login-btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.08);
+    box-shadow: 0 10px 26px rgba(201, 168, 76, 0.35);
+  }
+
+  #login-btn:active { transform: translateY(0); }
+
+  #login-error {
+    min-height: 18px;
+    margin-top: 4px;
+    font-size: 13px;
+    color: var(--danger);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  #login-error.visible { opacity: 1; }
+</style>
+</head>
+<body class="locked">
+
+<script>
+  if (sessionStorage.getItem('dd-auth') === '1') {
+    document.body.classList.remove('locked');
+  }
+</script>
+
+<div id="login-overlay" role="dialog" aria-modal="true" aria-labelledby="login-title">
+  <div class="login-card">
+    <div class="login-paw">🐾</div>
+    <h1 id="login-title" class="login-title">Dapper Dog Dashboard</h1>
+    <div class="login-subtitle">Marino Agency — Client Portal</div>
+    <form class="login-form" id="login-form" autocomplete="off">
+      <input
+        type="password"
+        id="login-input"
+        placeholder="Enter password"
+        autocomplete="current-password"
+        autofocus
+        spellcheck="false"
+      />
+      <button type="submit" id="login-btn">Enter</button>
+      <div id="login-error" aria-live="polite">Incorrect password</div>
+    </form>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const PW = 'dapper2026';
+    const form = document.getElementById('login-form');
+    const input = document.getElementById('login-input');
+    const errorEl = document.getElementById('login-error');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (input.value === PW) {
+        sessionStorage.setItem('dd-auth', '1');
+        document.body.classList.remove('locked');
+      } else {
+        errorEl.classList.add('visible');
+        input.classList.remove('shake');
+        void input.offsetWidth;
+        input.classList.add('shake');
+        input.select();
+      }
+    });
+
+    input.addEventListener('input', () => {
+      errorEl.classList.remove('visible');
+      input.classList.remove('shake');
+    });
+  })();
+</script>
+
+<div class="container">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-title">The Dapper Dog</div>
+      <div class="logo-subtitle">Live Campaign Dashboard</div>
+    </div>
+    <div class="last-updated">
+      <span class="live-dot"></span>
+      <span>Updated <span id="last-updated-time">—</span></span>
+    </div>
+  </header>
+
+  <div class="error-banner" id="error-banner"></div>
+
+  <!-- KPI Row -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Total Spend
+      </div>
+      <div class="kpi-value" id="kpi-spend">$0</div>
+      <div class="kpi-delta" id="kpi-spend-delta">Last 7 days</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        Total Leads
+      </div>
+      <div class="kpi-value" id="kpi-leads">0</div>
+      <div class="kpi-delta" id="kpi-leads-delta">Conversions captured</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+        Avg CPL
+      </div>
+      <div class="kpi-value" id="kpi-cpl">$0</div>
+      <div class="kpi-delta" id="kpi-cpl-delta">Cost per lead</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+        CTR
+      </div>
+      <div class="kpi-value" id="kpi-ctr">0%</div>
+      <div class="kpi-delta" id="kpi-ctr-delta">Click-through rate</div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts-grid">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Daily Spend</div>
+        <div class="card-badge">7 Days</div>
+      </div>
+      <div class="chart-wrapper">
+        <canvas id="spend-chart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Clicks per Ad</div>
+        <div class="card-badge">By Ad</div>
+      </div>
+      <div class="chart-wrapper">
+        <canvas id="clicks-chart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ads table -->
+  <div class="card ads-table-card">
+    <div class="card-header">
+      <div class="card-title">Ad Performance</div>
+      <div class="card-badge" id="ads-count">Loading</div>
+    </div>
+    <div class="ads-grid">
+      <div class="ads-header">
+        <div>Ad Creative</div>
+        <div>Spend</div>
+        <div class="hide-md">Impressions</div>
+        <div>Clicks</div>
+        <div>CTR</div>
+        <div class="hide-md">Leads</div>
+        <div>Status</div>
+      </div>
+      <div id="ads-body"></div>
+    </div>
+  </div>
+
+  <!-- Recommendations -->
+  <div class="rec-card">
+    <div class="rec-header">
+      <div class="rec-icon">
+        <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="rec-subtitle">AI Strategy</div>
+        <div class="rec-title">Campaign Recommendations</div>
+      </div>
+    </div>
+    <div class="rec-list" id="rec-list">
+      <div class="rec-item"><span class="rec-bullet">◆</span><span>Analyzing performance data…</span></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>Powered by <span>Zaks AI Agency</span></footer>
+</div>
+
+<script>
+  const CONFIG = {
+    accessToken: "EAANuVeRiXHkBRGkAbxMFt5e8dgJwxkbVAp3nv96vZCBX28iFp75qisZAUQE6Xdx8qFAafWcCB9T5y1KpojDMPcox6lUY92ApolazAF9lbIAURKiMOxP1M8AqFJfH6ZA4HlAFmToaFLweqgdrO65P1Awodf4QwK2cpfJhH1muWloaZBsnJBJWVyoKDKd7VgZDZD",
+    campaignId: "120246363934130416",
+    adsetId: "120246369560520416",
+    adAccountId: "act_1784420963001544",
+    apiVersion: "v19.0"
+  };
+
+  const GRAPH = `https://graph.facebook.com/${CONFIG.apiVersion}`;
+
+  // ---------- Utilities ----------
+  const fmtMoney = (n) => '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtInt = (n) => (Number(n) || 0).toLocaleString('en-US');
+  const fmtPct = (n) => (Number(n) || 0).toFixed(2) + '%';
+
+  function animateCounter(el, target, formatter, duration = 1200) {
+    const start = 0;
+    const startTime = performance.now();
+    function tick(now) {
+      const t = Math.min(1, (now - startTime) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = formatter(start + (target - start) * eased);
+      if (t < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function leadsFromActions(actions) {
+    if (!Array.isArray(actions)) return 0;
+    const leadTypes = new Set([
+      'lead',
+      'onsite_conversion.lead_grouped',
+      'offsite_conversion.fb_pixel_lead',
+      'offsite_conversion.custom.lead',
+      'onsite_web_lead'
+    ]);
+    let total = 0;
+    for (const a of actions) {
+      if (leadTypes.has(a.action_type) || a.action_type?.includes('lead')) {
+        total += Number(a.value) || 0;
+      }
+    }
+    return total;
+  }
+
+  const CORS_PROXY = '/.netlify/functions/meta-proxy?url=';
+
+  async function fetchJSON(url) {
+    const res = await fetch(CORS_PROXY + encodeURIComponent(url));
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`HTTP ${res.status}: ${text}`);
+    }
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message || 'API error');
+    return data;
+  }
+
+  // ---------- Demo data fallback ----------
+  function demoData() {
+    const labels = [];
+    const today = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      labels.push(d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' }));
+    }
+    return {
+      campaign: { spend: 482.17, impressions: 28540, clicks: 612, ctr: 2.14, leads: 27, cpl: 17.86 },
+      daily: {
+        labels,
+        spend: [58.20, 71.10, 66.84, 79.03, 68.55, 74.22, 64.23],
+        clicks: [78, 91, 85, 98, 84, 93, 83]
+      },
+      ads: [
+        { id: 'a1', name: 'Ad 1 - Before and After (Carousel)', spend: 142.38, impressions: 9240, clicks: 214, ctr: 2.32, leads: 11, status: 'ACTIVE' },
+        { id: 'a2', name: 'Ad 2 - The Van',                    spend: 118.50, impressions: 7180, clicks: 148, ctr: 2.06, leads: 6,  status: 'ACTIVE' },
+        { id: 'a3', name: 'Ad 3 - Meet Aaron',                  spend: 103.29, impressions: 6820, clicks: 131, ctr: 1.92, leads: 5,  status: 'ACTIVE' },
+        { id: 'a4', name: 'Ad 4 - $25 Off DAPPER25',            spend: 118.00, impressions: 5300, clicks: 119, ctr: 2.25, leads: 5,  status: 'ACTIVE' },
+      ]
+    };
+  }
+
+  // ---------- API ----------
+  async function fetchCampaignInsights() {
+    const url = `${GRAPH}/${CONFIG.campaignId}/insights?fields=spend,impressions,clicks,ctr,actions,cost_per_action_type&date_preset=last_7d&access_token=${CONFIG.accessToken}`;
+    const data = await fetchJSON(url);
+    const row = data.data?.[0] || {};
+    const leads = leadsFromActions(row.actions);
+    const spend = Number(row.spend) || 0;
+    return {
+      spend,
+      impressions: Number(row.impressions) || 0,
+      clicks: Number(row.clicks) || 0,
+      ctr: Number(row.ctr) || 0,
+      leads,
+      cpl: leads > 0 ? spend / leads : 0
+    };
+  }
+
+  async function fetchDailyBreakdown() {
+    const url = `${GRAPH}/${CONFIG.campaignId}/insights?fields=spend,clicks&date_preset=last_7d&time_increment=1&access_token=${CONFIG.accessToken}`;
+    const data = await fetchJSON(url);
+    const rows = data.data || [];
+    return {
+      labels: rows.map(r => new Date(r.date_start).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' })),
+      spend: rows.map(r => Number(r.spend) || 0),
+      clicks: rows.map(r => Number(r.clicks) || 0)
+    };
+  }
+
+  async function fetchAdsPerformance() {
+    const url = `${GRAPH}/${CONFIG.adsetId}/ads?fields=id,name,status,effective_status,insights.date_preset(last_7d){spend,impressions,clicks,ctr,actions}&access_token=${CONFIG.accessToken}`;
+    const data = await fetchJSON(url);
+    const ads = data.data || [];
+    return ads.map(ad => {
+      const ins = ad.insights?.data?.[0] || {};
+      return {
+        id: ad.id,
+        name: ad.name,
+        status: ad.effective_status || ad.status || 'UNKNOWN',
+        spend: Number(ins.spend) || 0,
+        impressions: Number(ins.impressions) || 0,
+        clicks: Number(ins.clicks) || 0,
+        ctr: Number(ins.ctr) || 0,
+        leads: leadsFromActions(ins.actions)
+      };
+    });
+  }
+
+  // ---------- Rendering ----------
+  function updateTimestamp() {
+    const el = document.getElementById('last-updated-time');
+    el.textContent = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  }
+
+  function renderKPIs(c) {
+    animateCounter(document.getElementById('kpi-spend'),  c.spend,  fmtMoney);
+    animateCounter(document.getElementById('kpi-leads'),  c.leads,  (v) => fmtInt(Math.round(v)));
+    animateCounter(document.getElementById('kpi-cpl'),    c.cpl,    fmtMoney);
+    animateCounter(document.getElementById('kpi-ctr'),    c.ctr,    (v) => v.toFixed(2) + '%');
+  }
+
+  let spendChart, clicksChart;
+
+  function renderSpendChart(daily) {
+    const ctx = document.getElementById('spend-chart').getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 260);
+    gradient.addColorStop(0, 'rgba(201, 168, 76, 0.35)');
+    gradient.addColorStop(1, 'rgba(201, 168, 76, 0)');
+
+    if (spendChart) spendChart.destroy();
+    spendChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: daily.labels,
+        datasets: [{
+          label: 'Spend',
+          data: daily.spend,
+          borderColor: '#C9A84C',
+          backgroundColor: gradient,
+          borderWidth: 2.5,
+          fill: true,
+          tension: 0.35,
+          pointBackgroundColor: '#C9A84C',
+          pointBorderColor: '#0a0a0a',
+          pointBorderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 7
+        }]
+      },
+      options: chartOpts((v) => fmtMoney(v))
+    });
+  }
+
+  function renderClicksChart(ads) {
+    const ctx = document.getElementById('clicks-chart').getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 260);
+    gradient.addColorStop(0, '#C9A84C');
+    gradient.addColorStop(1, 'rgba(201, 168, 76, 0.3)');
+
+    const labels = ads.map(a => shortAdName(a.name));
+    const clicks = ads.map(a => a.clicks);
+
+    if (clicksChart) clicksChart.destroy();
+    clicksChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Clicks',
+          data: clicks,
+          backgroundColor: gradient,
+          borderColor: '#C9A84C',
+          borderWidth: 1,
+          borderRadius: 6,
+          maxBarThickness: 60
+        }]
+      },
+      options: chartOpts((v) => fmtInt(v))
+    });
+  }
+
+  function chartOpts(tickFormatter) {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0a0a0a',
+          borderColor: '#C9A84C',
+          borderWidth: 1,
+          padding: 12,
+          titleColor: '#C9A84C',
+          bodyColor: '#fff',
+          titleFont: { family: 'Inter', weight: '600', size: 12 },
+          bodyFont: { family: 'Inter', size: 13 },
+          displayColors: false,
+          callbacks: {
+            label: (ctx) => ` ${tickFormatter(ctx.parsed.y)}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: '#888', font: { family: 'Inter', size: 11 } },
+          border: { color: '#1e1e1e' }
+        },
+        y: {
+          grid: { color: '#1e1e1e', drawBorder: false },
+          ticks: {
+            color: '#888',
+            font: { family: 'Inter', size: 11 },
+            callback: (v) => tickFormatter(v)
+          },
+          border: { display: false }
+        }
+      }
+    };
+  }
+
+  function shortAdName(name) {
+    const m = name.match(/Ad\s*(\d+)/i);
+    if (m) return 'Ad ' + m[1];
+    return name.length > 16 ? name.slice(0, 14) + '…' : name;
+  }
+
+  function adThumbClass(name, idx) {
+    const m = name.match(/Ad\s*(\d+)/i);
+    const n = m ? Math.min(4, Math.max(1, parseInt(m[1]))) : ((idx % 4) + 1);
+    return 'ad-thumb-' + n;
+  }
+
+  function adThumbLabel(name) {
+    const m = name.match(/Ad\s*(\d+)/i);
+    return m ? m[1] : '★';
+  }
+
+  function adTag(name) {
+    if (/before.*after|carousel/i.test(name)) return 'Carousel · Before/After';
+    if (/van/i.test(name)) return 'Brand · The Van';
+    if (/aaron/i.test(name)) return 'Founder · Meet Aaron';
+    if (/\$25|dapper25|off/i.test(name)) return 'Offer · $25 Off';
+    return 'Creative';
+  }
+
+  function statusLabel(s) {
+    if (!s) return { label: 'Unknown', cls: 'status-paused' };
+    const up = s.toUpperCase();
+    if (up === 'ACTIVE' || up === 'ADSET_PAUSED' && false) return { label: 'Active', cls: 'status-active' };
+    if (up === 'ACTIVE') return { label: 'Active', cls: 'status-active' };
+    if (up.includes('PAUSED')) return { label: 'Paused', cls: 'status-paused' };
+    return { label: up.replace(/_/g, ' ').toLowerCase(), cls: 'status-paused' };
+  }
+
+  function renderAdsTable(ads) {
+    const body = document.getElementById('ads-body');
+    const countEl = document.getElementById('ads-count');
+    countEl.textContent = `${ads.length} Ads`;
+
+    const sorted = [...ads].sort((a, b) => b.clicks - a.clicks);
+    const topId = sorted[0]?.id;
+
+    body.innerHTML = ads.map((ad, i) => {
+      const status = statusLabel(ad.status);
+      const isTop = ad.id === topId;
+      return `
+        <div class="ad-row ${isTop ? 'top' : ''}">
+          <div class="ad-name-cell">
+            <div class="ad-thumb ${adThumbClass(ad.name, i)}">${adThumbLabel(ad.name)}</div>
+            <div class="ad-name-text">
+              <div class="ad-name-primary">${ad.name}</div>
+              <div class="ad-name-secondary">${adTag(ad.name)}</div>
+            </div>
+          </div>
+          <div class="ad-metric" data-label="Spend">${fmtMoney(ad.spend)}</div>
+          <div class="ad-metric ad-metric-dim hide-md" data-label="Impr.">${fmtInt(ad.impressions)}</div>
+          <div class="ad-metric" data-label="Clicks">${fmtInt(ad.clicks)}</div>
+          <div class="ad-metric" data-label="CTR">${fmtPct(ad.ctr)}</div>
+          <div class="ad-metric hide-md" data-label="Leads">${fmtInt(ad.leads)}</div>
+          <div>
+            <span class="status-badge ${status.cls}">
+              <span class="status-dot"></span>${status.label}
+            </span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderRecommendations(campaign, ads) {
+    const list = document.getElementById('rec-list');
+    const recs = [];
+
+    const sorted = [...ads].sort((a, b) => b.ctr - a.ctr);
+    const top = sorted[0];
+
+    if (top && top.ctr > 0) {
+      recs.push({
+        html: `<strong style="color:var(--gold);">${top.name}</strong> is your top performer at <strong>${fmtPct(top.ctr)} CTR</strong>. Prioritize this creative in your rotation.`,
+        highlight: true
+      });
+    }
+
+    const hotCtr = ads.find(a => a.ctr > 2);
+    if (hotCtr) {
+      recs.push({ html: `<strong>${hotCtr.name}</strong> is crushing it with CTR above 2% — consider bumping budget by 20–30% to capitalize.` });
+    }
+
+    if (campaign.leads === 0) {
+      recs.push({ html: `Campaign is building momentum — leads haven't posted yet. Check back in 24 hours for optimization signal.` });
+    } else if (campaign.cpl > 0 && campaign.cpl < 15) {
+      recs.push({ html: `Strong <strong>${fmtMoney(campaign.cpl)} CPL</strong> — well under target. Scale spend to capture more leads at this efficiency.` });
+    } else if (campaign.cpl > 25) {
+      recs.push({ html: `CPL is elevated at <strong>${fmtMoney(campaign.cpl)}</strong>. Pause bottom-performing ads and shift budget to the top creative.` });
+    }
+
+    const lowCtr = ads.filter(a => a.ctr > 0 && a.ctr < 1);
+    if (lowCtr.length > 0) {
+      recs.push({ html: `${lowCtr.length} ad${lowCtr.length > 1 ? 's' : ''} running below 1% CTR — refresh creative or pause to protect CPL.` });
+    }
+
+    if (recs.length === 0) {
+      recs.push({ html: `All metrics within target range. Continue monitoring daily for scaling opportunities.` });
+    }
+
+    list.innerHTML = recs.map(r => `
+      <div class="rec-item ${r.highlight ? 'highlight' : ''}">
+        <span class="rec-bullet">◆</span>
+        <span>${r.html}</span>
+      </div>
+    `).join('');
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error-banner');
+    el.style.display = 'block';
+    el.textContent = `Live data unavailable — showing demo data. ${msg}`;
+  }
+
+  // ---------- Boot ----------
+  async function boot() {
+    updateTimestamp();
+    try {
+      const [campaign, daily, adsRaw] = await Promise.all([
+        fetchCampaignInsights(),
+        fetchDailyBreakdown(),
+        fetchAdsPerformance()
+      ]);
+
+      const ads = adsRaw.length ? adsRaw : demoData().ads;
+      renderKPIs(campaign);
+      renderSpendChart(daily.labels.length ? daily : demoData().daily);
+      renderClicksChart(ads);
+      renderAdsTable(ads);
+      renderRecommendations(campaign, ads);
+    } catch (err) {
+      console.error(err);
+      showError(err.message || 'API error');
+      const d = demoData();
+      renderKPIs(d.campaign);
+      renderSpendChart(d.daily);
+      renderClicksChart(d.ads);
+      renderAdsTable(d.ads);
+      renderRecommendations(d.campaign, d.ads);
+    }
+  }
+
+  boot();
+  setInterval(updateTimestamp, 60_000);
+</script>
+</body>
+</html>
