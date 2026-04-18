@@ -997,7 +997,7 @@
 
   // ---------- API ----------
   async function fetchCampaignInsights() {
-    const url = `${GRAPH}/${CONFIG.campaignId}/insights?fields=spend,impressions,clicks,ctr,actions,cost_per_action_type&date_preset=last_7d&access_token=${CONFIG.accessToken}`;
+    const url = `${GRAPH}/${CONFIG.campaignId}/insights?fields=spend,impressions,clicks,ctr,actions,cost_per_action_type&date_preset=maximum&access_token=${CONFIG.accessToken}`;
     const data = await fetchJSON(url);
     const row = data.data?.[0] || {};
     const leads = leadsFromActions(row.actions);
@@ -1013,7 +1013,7 @@
   }
 
   async function fetchDailyBreakdown() {
-    const url = `${GRAPH}/${CONFIG.campaignId}/insights?fields=spend,clicks&date_preset=last_7d&time_increment=1&access_token=${CONFIG.accessToken}`;
+    const url = `${GRAPH}/${CONFIG.campaignId}/insights?fields=spend,clicks&date_preset=maximum&time_increment=1&access_token=${CONFIG.accessToken}`;
     const data = await fetchJSON(url);
     const rows = data.data || [];
     return {
@@ -1024,7 +1024,7 @@
   }
 
   async function fetchAdsPerformance() {
-    const url = `${GRAPH}/${CONFIG.adsetId}/ads?fields=id,name,status,effective_status,insights.date_preset(last_7d){spend,impressions,clicks,ctr,actions}&access_token=${CONFIG.accessToken}`;
+    const url = `${GRAPH}/${CONFIG.adsetId}/ads?fields=id,name,status,effective_status,insights.date_preset(maximum){spend,impressions,clicks,ctr,actions}&access_token=${CONFIG.accessToken}`;
     const data = await fetchJSON(url);
     const ads = data.data || [];
     return ads.map(ad => {
