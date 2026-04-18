@@ -1,6 +1,2 @@
-[build]
-  functions = "netlify/functions"
-  publish = "."
-
-[context.production.environment]
-  NODE_VERSION = "18"
+[functions]
+  directory = "netlify/functions"
