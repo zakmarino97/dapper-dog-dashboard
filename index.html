@@ -401,6 +401,122 @@
     box-shadow: 0 0 6px currentColor;
   }
 
+  /* Retargeting Section */
+  .retargeting-section {
+    position: relative;
+    background: linear-gradient(135deg, rgba(201, 168, 76, 0.04) 0%, rgba(17, 17, 17, 0.6) 100%);
+    border: 1px solid rgba(201, 168, 76, 0.35);
+    border-radius: 18px;
+    padding: 28px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+
+  .retargeting-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, var(--gold) 50%, transparent 100%);
+    opacity: 0.7;
+  }
+
+  .retargeting-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+
+  .retargeting-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .retargeting-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .retargeting-subtitle {
+    font-size: 11px;
+    color: var(--gold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .retargeting-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(201, 168, 76, 0.12);
+    border: 1px solid rgba(201, 168, 76, 0.4);
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .retargeting-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 8px var(--gold);
+  }
+
+  .retargeting-kpis {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+
+  .retargeting-kpis .kpi-card {
+    border-color: rgba(201, 168, 76, 0.2);
+    background: rgba(10, 10, 10, 0.5);
+  }
+
+  .retargeting-empty {
+    padding: 28px 20px;
+    text-align: center;
+    border: 1px dashed rgba(201, 168, 76, 0.3);
+    border-radius: 12px;
+    color: var(--text-dim);
+    font-size: 14px;
+    letter-spacing: 0.02em;
+  }
+
+  .retargeting-empty .paw {
+    font-size: 28px;
+    display: block;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 0 12px var(--gold-glow));
+  }
+
+  @media (max-width: 1024px) {
+    .retargeting-kpis { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  @media (max-width: 640px) {
+    .retargeting-section { padding: 20px 16px; }
+    .retargeting-kpis { grid-template-columns: 1fr; }
+    .retargeting-title { font-size: 18px; }
+  }
+
   /* Recommendations */
   .rec-card {
     background: linear-gradient(135deg, #111111 0%, #0d0d0d 100%);
@@ -889,6 +1005,45 @@
     </div>
   </div>
 
+  <!-- Retargeting Campaign -->
+  <section class="retargeting-section" id="retargeting-section">
+    <div class="retargeting-header">
+      <div class="retargeting-title-group">
+        <div class="retargeting-title">🎯 Retargeting Campaign</div>
+        <div class="retargeting-subtitle">Landing Page Visitors — Warm Audience</div>
+      </div>
+      <div class="retargeting-badge">Warm Audience</div>
+    </div>
+    <div id="retargeting-body">
+      <div class="retargeting-kpis">
+        <div class="kpi-card">
+          <div class="kpi-label">
+            <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Retargeting Spend
+          </div>
+          <div class="kpi-value" id="rt-spend">$0</div>
+          <div class="kpi-delta">Today</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">
+            <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            Retargeting Clicks
+          </div>
+          <div class="kpi-value" id="rt-clicks">0</div>
+          <div class="kpi-delta">Warm audience</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">
+            <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            Retargeting CTR
+          </div>
+          <div class="kpi-value" id="rt-ctr">0%</div>
+          <div class="kpi-delta">Click-through rate</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Recommendations -->
   <div class="rec-card">
     <div class="rec-header">
@@ -916,6 +1071,8 @@
     accessToken: "EAANuVeRiXHkBRGkAbxMFt5e8dgJwxkbVAp3nv96vZCBX28iFp75qisZAUQE6Xdx8qFAafWcCB9T5y1KpojDMPcox6lUY92ApolazAF9lbIAURKiMOxP1M8AqFJfH6ZA4HlAFmToaFLweqgdrO65P1Awodf4QwK2cpfJhH1muWloaZBsnJBJWVyoKDKd7VgZDZD",
     campaignId: "120246363934130416",
     adsetId: "120246369560520416",
+    retargetingAdsetId: "120246838062450416",
+    retargetingAdId: "120246838079800416",
     adAccountId: "act_1784420963001544",
     apiVersion: "v19.0"
   };
@@ -1040,6 +1197,24 @@
         leads: leadsFromActions(ins.actions)
       };
     });
+  }
+
+  async function fetchRetargetingStats() {
+    const url = `${GRAPH}/${CONFIG.retargetingAdsetId}/ads?fields=name,insights.date_preset(maximum){spend,impressions,clicks,ctr}&access_token=${CONFIG.accessToken}`;
+    const data = await fetchJSON(url);
+    const ads = data.data || [];
+    let spend = 0, impressions = 0, clicks = 0;
+    let hasInsights = false;
+    for (const ad of ads) {
+      const ins = ad.insights?.data?.[0];
+      if (!ins) continue;
+      hasInsights = true;
+      spend += Number(ins.spend) || 0;
+      impressions += Number(ins.impressions) || 0;
+      clicks += Number(ins.clicks) || 0;
+    }
+    const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+    return { spend, impressions, clicks, ctr, hasData: hasInsights && impressions > 0 };
   }
 
   // ---------- Rendering ----------
@@ -1268,6 +1443,23 @@
     `).join('');
   }
 
+  function renderRetargeting(rt) {
+    const body = document.getElementById('retargeting-body');
+    if (!rt || !rt.hasData) {
+      body.innerHTML = `
+        <div class="retargeting-empty">
+          <span class="paw">🐾</span>
+          <div><strong style="color: var(--text);">Building audience…</strong></div>
+          <div style="margin-top:6px; font-size:12px;">Retargeting will activate once enough landing page visitors are collected.</div>
+        </div>
+      `;
+      return;
+    }
+    animateCounter(document.getElementById('rt-spend'),  rt.spend,  fmtMoney);
+    animateCounter(document.getElementById('rt-clicks'), rt.clicks, (v) => fmtInt(Math.round(v)));
+    animateCounter(document.getElementById('rt-ctr'),    rt.ctr,    (v) => v.toFixed(2) + '%');
+  }
+
   function showError(msg) {
     const el = document.getElementById('error-banner');
     el.style.display = 'block';
@@ -1278,10 +1470,11 @@
   async function boot() {
     updateTimestamp();
     try {
-      const [campaign, daily, adsRaw] = await Promise.all([
+      const [campaign, daily, adsRaw, retargeting] = await Promise.all([
         fetchCampaignInsights(),
         fetchDailyBreakdown(),
-        fetchAdsPerformance()
+        fetchAdsPerformance(),
+        fetchRetargetingStats().catch(err => { console.warn('Retargeting fetch failed:', err); return null; })
       ]);
 
       const ads = adsRaw.length ? adsRaw : demoData().ads;
@@ -1289,6 +1482,7 @@
       renderSpendChart(daily.labels.length ? daily : demoData().daily);
       renderClicksChart(ads);
       renderAdsTable(ads);
+      renderRetargeting(retargeting);
       renderRecommendations(campaign, ads);
     } catch (err) {
       console.error(err);
@@ -1298,6 +1492,7 @@
       renderSpendChart(d.daily);
       renderClicksChart(d.ads);
       renderAdsTable(d.ads);
+      renderRetargeting(null);
       renderRecommendations(d.campaign, d.ads);
     }
   }
