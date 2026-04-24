@@ -1184,19 +1184,21 @@
     const url = `${GRAPH}/${CONFIG.adsetId}/ads?fields=id,name,status,effective_status,insights.date_preset(maximum){spend,impressions,clicks,ctr,actions}&access_token=${CONFIG.accessToken}`;
     const data = await fetchJSON(url);
     const ads = data.data || [];
-    return ads.map(ad => {
-      const ins = ad.insights?.data?.[0] || {};
-      return {
-        id: ad.id,
-        name: ad.name,
-        status: ad.effective_status || ad.status || 'UNKNOWN',
-        spend: Number(ins.spend) || 0,
-        impressions: Number(ins.impressions) || 0,
-        clicks: Number(ins.clicks) || 0,
-        ctr: Number(ins.ctr) || 0,
-        leads: leadsFromActions(ins.actions)
-      };
-    });
+    return ads
+      .filter(ad => (ad.effective_status || ad.status || '') === 'ACTIVE')
+      .map(ad => {
+        const ins = ad.insights?.data?.[0] || {};
+        return {
+          id: ad.id,
+          name: ad.name,
+          status: ad.effective_status || ad.status || 'UNKNOWN',
+          spend: Number(ins.spend) || 0,
+          impressions: Number(ins.impressions) || 0,
+          clicks: Number(ins.clicks) || 0,
+          ctr: Number(ins.ctr) || 0,
+          leads: leadsFromActions(ins.actions)
+        };
+      });
   }
 
   async function fetchRetargetingStats() {
