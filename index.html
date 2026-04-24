@@ -1479,13 +1479,26 @@
         fetchRetargetingStats().catch(err => { console.warn('Retargeting fetch failed:', err); return null; })
       ]);
 
-      const ads = adsRaw.length ? adsRaw : demoData().ads;
+      // Merge retargeting ad into main ads array if it has data
+      let allAds = adsRaw.length ? [...adsRaw] : demoData().ads;
+      if (retargeting && retargeting.hasData) {
+        allAds.push({
+          id: CONFIG.retargetingAdId,
+          name: 'Ad 5 - Retargeting',
+          status: 'ACTIVE',
+          spend: retargeting.spend,
+          impressions: retargeting.impressions,
+          clicks: retargeting.clicks,
+          ctr: retargeting.ctr,
+          leads: 0
+        });
+      }
       renderKPIs(campaign);
       renderSpendChart(daily.labels.length ? daily : demoData().daily);
-      renderClicksChart(ads);
-      renderAdsTable(ads);
+      renderClicksChart(allAds);
+      renderAdsTable(allAds);
       renderRetargeting(retargeting);
-      renderRecommendations(campaign, ads);
+      renderRecommendations(campaign, allAds);
     } catch (err) {
       console.error(err);
       showError(err.message || 'API error');
