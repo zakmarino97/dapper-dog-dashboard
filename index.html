@@ -1210,9 +1210,11 @@
   }
 
   async function fetchRetargetingStats() {
-    const url = `${GRAPH}/${CONFIG.retargetingAdsetId}/ads?fields=name,insights.date_preset(maximum){spend,impressions,clicks,ctr}&access_token=${CONFIG.accessToken}`;
-    const data = await fetchJSON(url);
-    const ads = data.data || [];
+    // Check ad set status first
+    const adsetUrl = `${GRAPH}/${CONFIG.retargetingAdsetId}?fields=effective_status,ads{name,effective_status,insights.date_preset(maximum){spend,impressions,clicks,ctr}}&access_token=${CONFIG.accessToken}`;
+    const data = await fetchJSON(adsetUrl);
+    const isActive = data.effective_status === 'ACTIVE';
+    const ads = data.ads?.data || [];
     let spend = 0, impressions = 0, clicks = 0;
     let hasInsights = false;
     for (const ad of ads) {
@@ -1224,7 +1226,7 @@
       clicks += Number(ins.clicks) || 0;
     }
     const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
-    return { spend, impressions, clicks, ctr, hasData: hasInsights && impressions > 0 };
+    return { spend, impressions, clicks, ctr, hasData: hasInsights && impressions > 0, isActive };
   }
 
   // ---------- Rendering ----------
@@ -1490,7 +1492,7 @@
 
       // Merge retargeting ad into main ads array if it has data
       let allAds = adsRaw.length ? [...adsRaw] : demoData().ads;
-      if (retargeting && retargeting.hasData) {
+      if (retargeting && retargeting.hasData && retargeting.isActive) {
         allAds.push({
           id: CONFIG.retargetingAdId,
           name: 'Ad 5 - Retargeting',
